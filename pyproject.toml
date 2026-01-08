@@ -1,0 +1,94 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llm-med"
+version = "0.1.0"
+description = "A lightweight medical question-answering language model"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+maintainers = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+keywords = ["medical", "nlp", "language-model", "transformer", "gpt", "pytorch", "healthcare", "qa"]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Healthcare Industry",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "torch>=2.0.0",
+    "sentencepiece>=0.1.99",
+    "numpy>=1.24.0",
+    "tqdm>=4.65.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=22.0.0",
+    "flake8>=4.0.0",
+    "mypy>=0.950",
+]
+training = [
+    "tensorboard>=2.10.0",
+    "wandb>=0.13.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/sigdelsanjog/medllm"
+Documentation = "https://github.com/sigdelsanjog/medllm#readme"
+Repository = "https://github.com/sigdelsanjog/medllm"
+Issues = "https://github.com/sigdelsanjog/medllm/issues"
+
+[project.scripts]
+medllm-generate = "inference.generator:main"
+medllm-train = "training.train:main"
+
+[tool.setuptools]
+packages = ["model", "inference", "training", "utils", "configs", "data", "tokenizer"]
+
+[tool.setuptools.package-data]
+"*" = ["*.json", "*.yaml", "*.txt"]
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | build
+  | dist
+  | __pycache__
+)/
+'''
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"

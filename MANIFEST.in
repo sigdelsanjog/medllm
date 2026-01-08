@@ -1,0 +1,40 @@
+# Include documentation
+include README.md
+include LICENSE
+include requirements.txt
+
+# Include configuration files
+recursive-include configs *.py *.json *.yaml
+
+# Include model configs
+recursive-include model/configs *.py *.json
+
+# Include tokenizer files (vocab and model files)
+recursive-include tokenizer *.model *.vocab *.json
+
+# Exclude unnecessary files
+exclude .gitignore
+exclude .env
+exclude *.pyc
+exclude */__pycache__/*
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * .DS_Store
+
+# Exclude datasets, logs, and checkpoints (too large for PyPI)
+exclude dataset/*
+exclude logs/*
+exclude model/checkpoints/*
+recursive-exclude dataset *
+recursive-exclude logs *
+recursive-exclude model/checkpoints *
+
+# Exclude test files
+recursive-exclude tests *
+exclude test_*.py
+
+# Exclude development/training scripts not needed for inference
+exclude download_medquad.py
+exclude monitor_training.py
+exclude preprocess.py
+exclude generate_sample.py

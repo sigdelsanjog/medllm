@@ -1,0 +1,18 @@
+# Core dependencies for MedLLM project
+# Python 3.8+ required
+
+# Phase 1: Data processing and tokenization
+sentencepiece>=0.1.99      # SentencePiece tokenizer training
+numpy>=1.21.0              # Numerical operations
+
+# Phase 2-5: Model training and inference
+torch>=2.0.0               # PyTorch for Transformer implementation
+tqdm>=4.65.0               # Progress bars for training loops
+
+# Optional but recommended
+matplotlib>=3.5.0          # Visualization (loss curves, attention maps)
+tensorboard>=2.11.0        # Training monitoring
+
+# Development tools (optional)
+pytest>=7.2.0              # Testing framework
+black>=23.0.0              # Code formatting

@@ -1,0 +1,22 @@
+{
+  "vocab_size": 8000,
+  "max_length": 512,
+  "num_train_sequences": 6473,
+  "num_val_sequences": 720,
+  "total_tokens": 3682677,
+  "length_stats": {
+    "num_documents": 14489,
+    "mean": 253.17385602871144,
+    "median": 185.0,
+    "std": 293.3326556438072,
+    "min": 15,
+    "max": 5812,
+    "percentile_50": 185.0,
+    "percentile_75": 305.0,
+    "percentile_90": 457.0,
+    "percentile_95": 622.0,
+    "percentile_99": 1480.239999999998
+  },
+  "tokenizer_model": "tokenizer/medquad_tokenizer.model",
+  "seed": 42
+}

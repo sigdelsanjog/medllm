@@ -1,0 +1,38 @@
+{
+  "total_pairs": 16407,
+  "pairs_with_answers": 16407,
+  "pairs_without_answers": 0,
+  "sources": {
+    "CancerGov": 729,
+    "GARD": 5389,
+    "GHR": 5430,
+    "MPlusHealthTopics": 981,
+    "NIDDK": 1192,
+    "NINDS": 1088,
+    "NIHSeniorHealth": 769,
+    "NHLBI": 559,
+    "CDC": 270
+  },
+  "qtypes": {
+    "information": 4535,
+    "symptoms": 2748,
+    "exams and tests": 653,
+    "outlook": 361,
+    "stages": 77,
+    "treatment": 2442,
+    "research": 395,
+    "susceptibility": 324,
+    "causes": 727,
+    "prevention": 210,
+    "inheritance": 1446,
+    "genetic changes": 1087,
+    "frequency": 1120,
+    "complications": 46,
+    "considerations": 235,
+    "support groups": 1
+  },
+  "focus_categories": {
+    "Other": 295,
+    "Disease": 686
+  }
+}
