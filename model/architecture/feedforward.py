@@ -47,19 +47,19 @@ import torch.nn as nn
 class FeedForward(nn.Module):
     """
     Position-wise Feed-Forward Network.
-    
+
     Applies the same transformation to each position independently.
     This is why it's called "position-wise" - no interaction between positions.
-    
+
     Architecture:
         Linear(d_model → d_ff) → GELU → Linear(d_ff → d_model) → Dropout
-    
+
     Tensor shape flow:
         Input:  [batch_size, seq_len, d_model]
         Hidden: [batch_size, seq_len, d_ff]
         Output: [batch_size, seq_len, d_model]
     """
-    
+
     def __init__(self, d_model: int, d_ff: int, dropout: float = 0.1):
         """
         Args:
@@ -68,42 +68,42 @@ class FeedForward(nn.Module):
             dropout: Dropout probability
         """
         super().__init__()
-        
+
         # First linear projection: expand
         self.linear1 = nn.Linear(d_model, d_ff)
-        
+
         # Non-linear activation
         # GELU (Gaussian Error Linear Unit) - smoother than ReLU
         # Used in GPT-2, BERT, and most modern transformers
         self.activation = nn.GELU()
-        
+
         # Second linear projection: compress back
         self.linear2 = nn.Linear(d_ff, d_model)
-        
+
         # Dropout for regularization
         self.dropout = nn.Dropout(dropout)
-    
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Args:
             x: Input tensor [batch_size, seq_len, d_model]
-            
+
         Returns:
             Output tensor [batch_size, seq_len, d_model]
-        
+
         Note: Each position is processed identically and independently.
         No attention or interaction between different positions here.
         """
         # Expand: [batch_size, seq_len, d_model] → [batch_size, seq_len, d_ff]
         x = self.linear1(x)
-        
+
         # Non-linearity
         x = self.activation(x)
-        
+
         # Compress back: [batch_size, seq_len, d_ff] → [batch_size, seq_len, d_model]
         x = self.linear2(x)
-        
+
         # Dropout
         x = self.dropout(x)
-        
+
         return x

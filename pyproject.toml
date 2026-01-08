@@ -8,12 +8,12 @@ version = "0.1.0"
 description = "A lightweight medical question-answering language model"
 readme = "README.md"
 requires-python = ">=3.8"
-license = {text = "MIT"}
+license = {file = "LICENSE"}
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Sanjog Sigdel", email = "sigdelsanjog@gmail.com"}
 ]
 maintainers = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Sanjog Sigdel", email = "sigdelsanjog@gmail.com"}
 ]
 keywords = ["medical", "nlp", "language-model", "transformer", "gpt", "pytorch", "healthcare", "qa"]
 
@@ -63,10 +63,22 @@ medllm-generate = "inference.generator:main"
 medllm-train = "training.train:main"
 
 [tool.setuptools]
-packages = ["model", "inference", "training", "utils", "configs", "data", "tokenizer"]
+packages = [
+    "model",
+    "model.architecture",
+    "model.configs",
+    "inference",
+    "training",
+    "utils",
+    "configs",
+    "data",
+    "data.parsers",
+    "tokenizer",
+]
 
 [tool.setuptools.package-data]
 "*" = ["*.json", "*.yaml", "*.txt"]
+tokenizer = ["*.model", "*.vocab"]
 
 [tool.black]
 line-length = 100

@@ -24,12 +24,12 @@ from .decoder_block import TransformerDecoderBlock
 from .transformer import GPTTransformer
 
 __all__ = [
-    'TokenEmbedding',
-    'PositionalEmbedding',
-    'TokenPositionalEmbedding',
-    'MultiHeadAttention',
-    'create_causal_mask',
-    'FeedForward',
-    'TransformerDecoderBlock',
-    'GPTTransformer',
+    "TokenEmbedding",
+    "PositionalEmbedding",
+    "TokenPositionalEmbedding",
+    "MultiHeadAttention",
+    "create_causal_mask",
+    "FeedForward",
+    "TransformerDecoderBlock",
+    "GPTTransformer",
 ]
