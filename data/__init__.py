@@ -2,4 +2,4 @@
 Data processing module
 """
 
-__all__ = ['parsers']
+__all__ = ["parsers"]

@@ -7,4 +7,4 @@ from various XML sources.
 
 from .medquad_parser import MedQuADParser
 
-__all__ = ['MedQuADParser']
+__all__ = ["MedQuADParser"]

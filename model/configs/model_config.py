@@ -14,7 +14,7 @@ WHAT THIS FILE CONTAINS:
    - d_ff: Feed-forward hidden dimension
    - dropout: Dropout probability
    - max_seq_len: Maximum sequence length
-   
+
 2. Predefined configurations:
    - Tiny: For quick testing (d_model=128, n_layers=2)
    - Small: For GTX 1080 training (d_model=256, n_layers=4)
@@ -49,78 +49,81 @@ from pathlib import Path
 class ModelConfig:
     """
     Transformer model configuration.
-    
+
     All hyperparameters in one place for easy experimentation.
     """
+
     # Vocabulary
-    vocab_size: int = 8000          # From SentencePiece tokenizer
-    
+    vocab_size: int = 8000  # From SentencePiece tokenizer
+
     # Architecture
-    d_model: int = 256              # Embedding/hidden dimension
-    n_layers: int = 4               # Number of transformer blocks
-    n_heads: int = 4                # Number of attention heads
-    d_ff: int = 1024               # FFN hidden dimension (4 * d_model)
-    
+    d_model: int = 256  # Embedding/hidden dimension
+    n_layers: int = 4  # Number of transformer blocks
+    n_heads: int = 4  # Number of attention heads
+    d_ff: int = 1024  # FFN hidden dimension (4 * d_model)
+
     # Regularization
-    dropout: float = 0.1            # Dropout probability
-    
+    dropout: float = 0.1  # Dropout probability
+
     # Sequence
-    max_seq_len: int = 512          # Maximum sequence length
-    
+    max_seq_len: int = 512  # Maximum sequence length
+
     # Special tokens (from tokenizer)
     pad_token_id: int = 0
     unk_token_id: int = 1
     bos_token_id: int = 2
     eos_token_id: int = 3
-    
+
     def __post_init__(self):
         """Validate configuration."""
-        assert self.d_model % self.n_heads == 0, \
-            f"d_model ({self.d_model}) must be divisible by n_heads ({self.n_heads})"
+        assert (
+            self.d_model % self.n_heads == 0
+        ), f"d_model ({self.d_model}) must be divisible by n_heads ({self.n_heads})"
         assert self.d_model > 0, "d_model must be positive"
         assert self.n_layers > 0, "n_layers must be positive"
         assert 0.0 <= self.dropout < 1.0, "dropout must be in [0, 1)"
-    
+
     @property
     def d_head(self) -> int:
         """Dimension per attention head."""
         return self.d_model // self.n_heads
-    
+
     def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
-            'vocab_size': self.vocab_size,
-            'd_model': self.d_model,
-            'n_layers': self.n_layers,
-            'n_heads': self.n_heads,
-            'd_ff': self.d_ff,
-            'dropout': self.dropout,
-            'max_seq_len': self.max_seq_len,
-            'pad_token_id': self.pad_token_id,
-            'unk_token_id': self.unk_token_id,
-            'bos_token_id': self.bos_token_id,
-            'eos_token_id': self.eos_token_id,
+            "vocab_size": self.vocab_size,
+            "d_model": self.d_model,
+            "n_layers": self.n_layers,
+            "n_heads": self.n_heads,
+            "d_ff": self.d_ff,
+            "dropout": self.dropout,
+            "max_seq_len": self.max_seq_len,
+            "pad_token_id": self.pad_token_id,
+            "unk_token_id": self.unk_token_id,
+            "bos_token_id": self.bos_token_id,
+            "eos_token_id": self.eos_token_id,
         }
-    
+
     def save(self, path: Path):
         """Save config to JSON file."""
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             json.dump(self.to_dict(), f, indent=2)
-    
+
     @classmethod
-    def from_dict(cls, config_dict: dict) -> 'ModelConfig':
+    def from_dict(cls, config_dict: dict) -> "ModelConfig":
         """Load from dictionary."""
         return cls(**config_dict)
-    
+
     @classmethod
-    def from_file(cls, path: Path) -> 'ModelConfig':
+    def from_file(cls, path: Path) -> "ModelConfig":
         """Load from JSON file."""
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             config_dict = json.load(f)
         return cls.from_dict(config_dict)
 
 
 # Predefined configurations for different use cases
+
 
 def get_tiny_config() -> ModelConfig:
     """
@@ -128,13 +131,7 @@ def get_tiny_config() -> ModelConfig:
     ~2M parameters, very fast training.
     """
     return ModelConfig(
-        vocab_size=8000,
-        d_model=128,
-        n_layers=2,
-        n_heads=4,
-        d_ff=512,
-        dropout=0.1,
-        max_seq_len=512
+        vocab_size=8000, d_model=128, n_layers=2, n_heads=4, d_ff=512, dropout=0.1, max_seq_len=512
     )
 
 
@@ -144,13 +141,7 @@ def get_small_config() -> ModelConfig:
     ~10M parameters, good balance of speed and capacity.
     """
     return ModelConfig(
-        vocab_size=8000,
-        d_model=256,
-        n_layers=4,
-        n_heads=4,
-        d_ff=1024,
-        dropout=0.1,
-        max_seq_len=512
+        vocab_size=8000, d_model=256, n_layers=4, n_heads=4, d_ff=1024, dropout=0.1, max_seq_len=512
     )
 
 
@@ -160,11 +151,5 @@ def get_medium_config() -> ModelConfig:
     ~40M parameters, better quality but slower.
     """
     return ModelConfig(
-        vocab_size=8000,
-        d_model=512,
-        n_layers=6,
-        n_heads=8,
-        d_ff=2048,
-        dropout=0.1,
-        max_seq_len=512
+        vocab_size=8000, d_model=512, n_layers=6, n_heads=8, d_ff=2048, dropout=0.1, max_seq_len=512
     )

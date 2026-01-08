@@ -50,23 +50,23 @@ from .feedforward import FeedForward
 class TransformerDecoderBlock(nn.Module):
     """
     Single Transformer Decoder Block.
-    
+
     This is one "layer" of the transformer. We stack multiple of these.
-    
+
     Architecture (Pre-LN):
         1. LayerNorm → Multi-Head Attention → Residual
         2. LayerNorm → Feed-Forward → Residual
-    
+
     Tensor shape flow:
         Input:  [batch_size, seq_len, d_model]
         Output: [batch_size, seq_len, d_model] (same shape)
-    
+
     Why Pre-LN instead of Post-LN?
     - Pre-LN: Normalize BEFORE sublayer → more stable gradients
     - Post-LN: Normalize AFTER sublayer → can have training instability
     - GPT-2 and modern transformers use Pre-LN
     """
-    
+
     def __init__(self, d_model: int, n_heads: int, d_ff: int, dropout: float = 0.1):
         """
         Args:
@@ -76,29 +76,29 @@ class TransformerDecoderBlock(nn.Module):
             dropout: Dropout probability
         """
         super().__init__()
-        
+
         # Multi-head self-attention
         self.attention = MultiHeadAttention(d_model, n_heads, dropout)
-        
+
         # Feed-forward network
         self.feed_forward = FeedForward(d_model, d_ff, dropout)
-        
+
         # Layer normalization (one for each sublayer)
         self.norm1 = nn.LayerNorm(d_model)
         self.norm2 = nn.LayerNorm(d_model)
-        
+
         # Dropout for residual connections
         self.dropout = nn.Dropout(dropout)
-    
+
     def forward(self, x: torch.Tensor, mask: torch.Tensor = None) -> torch.Tensor:
         """
         Args:
             x: Input tensor [batch_size, seq_len, d_model]
             mask: Causal mask [seq_len, seq_len]
-            
+
         Returns:
             Output tensor [batch_size, seq_len, d_model]
-        
+
         Step-by-step explanation:
         1. Normalize input
         2. Apply attention
@@ -110,21 +110,21 @@ class TransformerDecoderBlock(nn.Module):
         # Sublayer 1: Self-Attention with residual
         # Pre-LN: normalize first
         normed = self.norm1(x)
-        
+
         # Apply attention
         attention_output = self.attention(normed, mask)
-        
+
         # Residual connection: x + attention(norm(x))
         x = x + self.dropout(attention_output)
-        
+
         # Sublayer 2: Feed-Forward with residual
         # Pre-LN: normalize first
         normed = self.norm2(x)
-        
+
         # Apply feed-forward
         ff_output = self.feed_forward(normed)
-        
+
         # Residual connection: x + ffn(norm(x))
         x = x + self.dropout(ff_output)
-        
+
         return x

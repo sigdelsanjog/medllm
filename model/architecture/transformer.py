@@ -67,72 +67,74 @@ from .attention import create_causal_mask
 class GPTTransformer(nn.Module):
     """
     GPT-style Causal Language Model.
-    
+
     This is the COMPLETE model. Everything comes together here.
-    
+
     Architecture:
         1. Token + Positional Embeddings
         2. N x Decoder Blocks
         3. Final LayerNorm
         4. LM Head (projects to vocab)
-    
+
     Training objective: Next-token prediction
         - Given tokens [t0, t1, t2, ..., tn]
         - Predict [t1, t2, t3, ..., tn+1]
-    
+
     Tensor flow:
         Input:  [batch_size, seq_len] token IDs
         Embed:  [batch_size, seq_len, d_model]
         Blocks: [batch_size, seq_len, d_model]
         Logits: [batch_size, seq_len, vocab_size]
     """
-    
+
     def __init__(self, config):
         """
         Args:
             config: ModelConfig object with hyperparameters
         """
         super().__init__()
-        
+
         self.config = config
-        
+
         # 1. Embeddings (token + positional)
         self.embeddings = TokenPositionalEmbedding(
             vocab_size=config.vocab_size,
             d_model=config.d_model,
             max_seq_len=config.max_seq_len,
-            dropout=config.dropout
+            dropout=config.dropout,
         )
-        
+
         # 2. Stack of decoder blocks
-        self.decoder_blocks = nn.ModuleList([
-            TransformerDecoderBlock(
-                d_model=config.d_model,
-                n_heads=config.n_heads,
-                d_ff=config.d_ff,
-                dropout=config.dropout
-            )
-            for _ in range(config.n_layers)
-        ])
-        
+        self.decoder_blocks = nn.ModuleList(
+            [
+                TransformerDecoderBlock(
+                    d_model=config.d_model,
+                    n_heads=config.n_heads,
+                    d_ff=config.d_ff,
+                    dropout=config.dropout,
+                )
+                for _ in range(config.n_layers)
+            ]
+        )
+
         # 3. Final layer normalization
         self.final_norm = nn.LayerNorm(config.d_model)
-        
+
         # 4. Language modeling head (output projection)
         self.lm_head = nn.Linear(config.d_model, config.vocab_size, bias=False)
-        
+
         # Weight tying: Share weights between embeddings and output projection
         # This is standard practice in language models
         # Why? Reduces parameters and improves generalization
         self.lm_head.weight = self.embeddings.token_embedding.embedding.weight
-        
+
         # Initialize weights
         self.apply(self._init_weights)
-    
+
     def _init_weights(self, module):
         """
         Initialize weights using Xavier/Glorot initialization.
-        
+
         This is CRITICAL for training stability.
         Poor initialization → vanishing/exploding gradients
         """
@@ -145,18 +147,18 @@ class GPTTransformer(nn.Module):
         elif isinstance(module, nn.LayerNorm):
             torch.nn.init.ones_(module.weight)
             torch.nn.init.zeros_(module.bias)
-    
+
     def forward(self, input_ids: torch.Tensor, mask: torch.Tensor = None) -> torch.Tensor:
         """
         Forward pass through the model.
-        
+
         Args:
             input_ids: Token IDs [batch_size, seq_len]
             mask: Optional causal mask [seq_len, seq_len]
-            
+
         Returns:
             Logits [batch_size, seq_len, vocab_size]
-        
+
         Step-by-step:
         1. Convert token IDs to embeddings
         2. Pass through each decoder block
@@ -164,34 +166,34 @@ class GPTTransformer(nn.Module):
         4. Project to vocabulary
         """
         batch_size, seq_len = input_ids.size()
-        
+
         # Create causal mask if not provided
         if mask is None:
             mask = create_causal_mask(seq_len, device=input_ids.device)
-        
+
         # 1. Embeddings: [batch_size, seq_len] → [batch_size, seq_len, d_model]
         x = self.embeddings(input_ids)
-        
+
         # 2. Pass through decoder blocks
         for block in self.decoder_blocks:
             x = block(x, mask)
-        
+
         # 3. Final layer norm
         x = self.final_norm(x)
-        
+
         # 4. Project to vocabulary: [batch_size, seq_len, d_model] → [batch_size, seq_len, vocab_size]
         logits = self.lm_head(x)
-        
+
         return logits
-    
+
     def count_parameters(self) -> int:
         """Count total trainable parameters."""
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
-    
+
     def get_num_params(self, non_embedding: bool = False) -> int:
         """
         Get parameter count.
-        
+
         Args:
             non_embedding: If True, exclude embedding parameters
         """
