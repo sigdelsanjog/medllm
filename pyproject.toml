@@ -78,6 +78,8 @@ packages = [
 
 [tool.setuptools.package-data]
 "*" = ["*.json", "*.yaml", "*.txt"]
+# Include pre-trained tokenizer model and vocabulary (~240KB total)
+# These are required for text tokenization without needing to retrain
 tokenizer = ["*.model", "*.vocab"]
 
 [tool.black]
