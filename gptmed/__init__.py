@@ -13,9 +13,9 @@ Main Components:
 - utils: Utility functions
 
 Example:
-    >>> from llm_med.model.architecture import GPTTransformer
-    >>> from llm_med.model.configs.model_config import get_small_config
-    >>> from llm_med.inference.generator import TextGenerator
+    >>> from gptmed.model.architecture import GPTTransformer
+    >>> from gptmed.model.configs.model_config import get_small_config
+    >>> from gptmed.inference.generator import TextGenerator
     >>> 
     >>> config = get_small_config()
     >>> model = GPTTransformer(config)
@@ -26,8 +26,8 @@ __author__ = "Sanjog Sigdel"
 __email__ = "sigdelsanjog@gmail.com"
 
 # Expose main components at package level for convenience
-from llm_med.model.architecture import GPTTransformer
-from llm_med.model.configs.model_config import ModelConfig, get_small_config, get_tiny_config
+from gptmed.model.architecture import GPTTransformer
+from gptmed.model.configs.model_config import ModelConfig, get_small_config, get_tiny_config
 
 __all__ = [
     "GPTTransformer",

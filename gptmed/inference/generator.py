@@ -38,11 +38,11 @@ import sentencepiece as spm
 from pathlib import Path
 from typing import List, Optional
 
-from llm_med.model.architecture import GPTTransformer
-from llm_med.model.configs.model_config import ModelConfig
-from llm_med.inference.generation_config import GenerationConfig
-from llm_med.inference.sampling import sample_next_token
-from llm_med.inference.decoding_utils import (
+from gptmed.model.architecture import GPTTransformer
+from gptmed.model.configs.model_config import ModelConfig
+from gptmed.inference.generation_config import GenerationConfig
+from gptmed.inference.sampling import sample_next_token
+from gptmed.inference.decoding_utils import (
     apply_repetition_penalty,
     block_ngram_repeats,
     should_stop_generation,

@@ -51,16 +51,16 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from llm_med.model.architecture import GPTTransformer
-from llm_med.training.utils import (
+from gptmed.model.architecture import GPTTransformer
+from gptmed.training.utils import (
     clip_grad_norm,
     get_lr_with_warmup,
     set_learning_rate,
     estimate_loss_dataloader,
     compute_perplexity,
 )
-from llm_med.utils.logging import MetricsLogger, log_training_step, log_validation
-from llm_med.utils.checkpoints import CheckpointManager
+from gptmed.utils.logging import MetricsLogger, log_training_step, log_validation
+from gptmed.utils.checkpoints import CheckpointManager
 
 
 class Trainer:
