@@ -1,11 +1,33 @@
 # Changelog
 
-All notable changes to llm-med will be documented in this file.
+All notable changes to gptmed will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.0.1] - 2026-01-10
+
+### Changed
+
+- **BREAKING CHANGE**: Complete package rename from gptgpt to gptmed
+  - Package renamed to reflect medical AI vision and purpose
+  - All imports changed from `gptgpt` to `gptmed`
+  - CLI commands renamed: `gptmed-generate`, `gptmed-train`
+  - Model files renamed: `gptmed_model.pt`, `gptmed_tokenizer.model`
+  - Repository and documentation updated
+  - Version reset to 0.0.1 to mark new beginning
+
+### Vision
+
+- Establishing foundation for end-to-end medical assistance platform
+- Future roadmap includes:
+  - Casual question-answering (current capability)
+  - Conversational models
+  - Logic and reasoning capabilities
+  - Medical prescription analysis
+  - Comprehensive healthcare domain support for hospitals, clinics, pharmacies, doctors, and patients
 
 ## [0.2.0] - 2026-01-09
 

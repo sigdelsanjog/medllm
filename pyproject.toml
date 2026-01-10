@@ -3,8 +3,8 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "gptgpt"
-version = "0.2.1"
+name = "gptmed"
+version = "0.0.1"
 description = "A lightweight GPT-based language model framework for training custom question-answering models on any domain"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -53,28 +53,28 @@ training = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/sigdelsanjog/gptgpt"
-Documentation = "https://github.com/sigdelsanjog/gptgpt#readme"
-Repository = "https://github.com/sigdelsanjog/gptgpt"
-Issues = "https://github.com/sigdelsanjog/gptgpt/issues"
+Homepage = "https://github.com/sigdelsanjog/gptmed"
+Documentation = "https://github.com/sigdelsanjog/gptmed#readme"
+Repository = "https://github.com/sigdelsanjog/gptmed"
+Issues = "https://github.com/sigdelsanjog/gptmed/issues"
 
 [project.scripts]
-gptgpt-generate = "gptgpt.inference.generator:main"
-gptgpt-train = "gptgpt.training.train:main"
+gptmed-generate = "gptmed.inference.generator:main"
+gptmed-train = "gptmed.training.train:main"
 
 [tool.setuptools]
 packages = [
-    "gptgpt",
-    "gptgpt.model",
-    "gptgpt.model.architecture",
-    "gptgpt.model.configs",
-    "gptgpt.inference",
-    "gptgpt.training",
-    "gptgpt.utils",
-    "gptgpt.configs",
-    "gptgpt.data",
-    "gptgpt.data.parsers",
-    "gptgpt.tokenizer",
+    "gptmed",
+    "gptmed.model",
+    "gptmed.model.architecture",
+    "gptmed.model.configs",
+    "gptmed.inference",
+    "gptmed.training",
+    "gptmed.utils",
+    "gptmed.configs",
+    "gptmed.data",
+    "gptmed.data.parsers",
+    "gptmed.tokenizer",
 ]
 
 [tool.setuptools.package-data]

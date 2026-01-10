@@ -1,8 +1,8 @@
-# GptGpt 🤖
+# GptMed 🤖
 
 A lightweight GPT-based language model framework for training custom question-answering models on any domain. This package provides a transformer-based GPT architecture that you can train on your own Q&A datasets - whether it's casual conversations, technical support, education, or any other domain.
 
-[![PyPI version](https://badge.fury.io/py/gptgpt.svg)](https://badge.fury.io/py/gptgpt)
+[![PyPI version](https://badge.fury.io/py/gptmed.svg)](https://badge.fury.io/py/gptmed)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -20,14 +20,14 @@ A lightweight GPT-based language model framework for training custom question-an
 ### From PyPI (Recommended)
 
 ```bash
-pip install gptgpt
+pip install gptmed
 ```
 
 ### From Source
 
 ```bash
-git clone https://github.com/sigdelsanjog/gptgpt.git
-cd gptgpt
+git clone https://github.com/sigdelsanjog/gptmed.git
+cd gptmed
 pip install -e .
 ```
 
@@ -35,13 +35,13 @@ pip install -e .
 
 ```bash
 # For development
-pip install gptgpt[dev]
+pip install gptmed[dev]
 
 # For training
-pip install gptgpt[training]
+pip install gptmed[training]
 
 # All dependencies
-pip install gptgpt[dev,training]
+pip install gptmed[dev,training]
 ```
 
 ## Quick Start
@@ -49,9 +49,9 @@ pip install gptgpt[dev,training]
 ### Inference (Generate Answers)
 
 ```python
-from gptgpt.inference.generator import TextGenerator
-from gptgpt.model.architecture import GPTTransformer
-from gptgpt.model.configs.model_config import get_small_config
+from gptmed.inference.generator import TextGenerator
+from gptmed.model.architecture import GPTTransformer
+from gptmed.model.configs.model_config import get_small_config
 
 # Load model
 config = get_small_config()
@@ -82,18 +82,18 @@ print(f"A: {answer}")
 
 ```bash
 # Generate answers
-gptgpt-generate --prompt "How do I train a custom model?" --max-length 100
+gptmed-generate --prompt "How do I train a custom model?" --max-length 100
 
 # Train model
-gptgpt-train --model-size small --num-epochs 10 --batch-size 16
+gptmed-train --model-size small --num-epochs 10 --batch-size 16
 ```
 
 ### Training Your Own Model
 
 ```python
-from gptgpt.training.train import main
-from gptgpt.configs.train_config import get_default_config
-from gptgpt.model.configs.model_config import get_small_config
+from gptmed.training.train import main
+from gptmed.configs.train_config import get_default_config
+from gptmed.model.configs.model_config import get_small_config
 
 # Configure training
 train_config = get_default_config()
@@ -120,7 +120,7 @@ The model uses a custom GPT-based transformer architecture:
 ### Model Sizes
 
 ```python
-from gptgpt.model.configs.model_config import (
+from gptmed.model.configs.model_config import (
     get_tiny_config,   # ~2M parameters - for testing
     get_small_config,  # ~10M parameters - recommended
     get_medium_config  # ~50M parameters - higher quality
@@ -130,7 +130,7 @@ from gptgpt.model.configs.model_config import (
 ### Training Configuration
 
 ```python
-from gptgpt.configs.train_config import TrainingConfig
+from gptmed.configs.train_config import TrainingConfig
 
 config = TrainingConfig(
     batch_size=16,
@@ -144,7 +144,7 @@ config = TrainingConfig(
 ## Project Structure
 
 ```
-gptgpt/
+gptmed/
 ├── model/
 │   ├── architecture/      # GPT transformer implementation
 │   └── configs/           # Model configurations
@@ -227,10 +227,10 @@ If you use this model in your research, please cite:
 
 ```bibtex
 @software{llm_med_2026,
-  author = {Your Name},
-  title = {llm-med: Medical Question-Answering Language Model},
+  author = {Sanjog Sigdel},
+  title = {GptMed: A custom causal question answering general purpose GPT Transformer Architecture Model},
   year = {2026},
-  url = {https://github.com/yourusername/medllm}
+  url = {https://github.com/sigdelsanjog/gptmed}
 }
 ```
 
@@ -242,7 +242,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - MedQuAD dataset creators
 - PyTorch team
-- Hugging Face for inspiration
 
 ## Disclaimer
 
@@ -250,9 +249,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-- 📫 Issues: [GitHub Issues](https://github.com/yourusername/medllm/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/medllm/discussions)
-- 📧 Email: your.email@example.com
+- 📫 Issues: [GitHub Issues](https://github.com/sigdelsanjog/gptmed/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/sigdelsanjog/gptmed/discussions)
+- 📧 Email: sanjog.sigdel@ku.edu.np
 
 ## Changelog
 
@@ -260,4 +259,4 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ---
 
-Made with ❤️ for the medical AI community
+Made with ❤️ for learning purpose
