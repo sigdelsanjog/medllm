@@ -110,13 +110,13 @@ def config_to_args(config: Dict[str, Any]) -> Dict[str, Any]:
         
         # Checkpointing
         'checkpoint_dir': config['checkpointing']['checkpoint_dir'],
-        'save_interval': config['checkpointing']['save_every'],
+        'save_interval': config['checkpointing'].get('save_interval', config['checkpointing'].get('save_every', 1)),
         'keep_last_n': config['checkpointing']['keep_last_n'],
         
         # Logging
         'log_dir': config['logging']['log_dir'],
-        'eval_interval': config['logging']['eval_every'],
-        'log_interval': config['logging']['log_every'],
+        'eval_interval': config['logging'].get('eval_interval', config['logging'].get('eval_every', 100)),
+        'log_interval': config['logging'].get('log_interval', config['logging'].get('log_every', 10)),
         
         # Device
         'device': config['device']['device'],

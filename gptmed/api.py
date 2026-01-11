@@ -187,9 +187,9 @@ def train_from_config(config_path: str, verbose: bool = True) -> Dict[str, Any]:
         betas=args['betas'],
         eps=args['eps'],
         max_steps=args['max_steps'],
-        save_every=args['save_every'],
-        eval_every=args['eval_every'],
-        log_every=args['log_every'],
+        save_interval=args['save_interval'],
+        eval_interval=args['eval_interval'],
+        log_interval=args['log_interval'],
         keep_last_n=args['keep_last_n'],
         train_data_path=args['train_data'],
         val_data_path=args['val_data'],
@@ -333,20 +333,32 @@ def generate(
     model = GPTTransformer(model_config)
     model.load_state_dict(checkpoint_data['model_state_dict'])
     
+    # Load tokenizer
+    import sentencepiece as spm
+    from gptmed.inference.generation_config import GenerationConfig
+    
+    tokenizer_sp = spm.SentencePieceProcessor()
+    tokenizer_sp.Load(tokenizer)
+    
     # Create generator
     generator = TextGenerator(
         model=model,
-        tokenizer_path=tokenizer,
+        tokenizer=tokenizer_sp,
         device=device
+    )
+    
+    # Create generation config
+    gen_config = GenerationConfig(
+        max_length=max_length,
+        temperature=temperature,
+        top_k=top_k,
+        top_p=top_p
     )
     
     # Generate
     output = generator.generate(
         prompt=prompt,
-        max_length=max_length,
-        temperature=temperature,
-        top_k=top_k,
-        top_p=top_p
+        gen_config=gen_config
     )
     
     return output
