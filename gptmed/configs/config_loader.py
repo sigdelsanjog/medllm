@@ -110,13 +110,13 @@ def config_to_args(config: Dict[str, Any]) -> Dict[str, Any]:
         
         # Checkpointing
         'checkpoint_dir': config['checkpointing']['checkpoint_dir'],
-        'save_every': config['checkpointing']['save_every'],
+        'save_interval': config['checkpointing']['save_every'],
         'keep_last_n': config['checkpointing']['keep_last_n'],
         
         # Logging
         'log_dir': config['logging']['log_dir'],
-        'eval_every': config['logging']['eval_every'],
-        'log_every': config['logging']['log_every'],
+        'eval_interval': config['logging']['eval_every'],
+        'log_interval': config['logging']['log_every'],
         
         # Device
         'device': config['device']['device'],
@@ -160,13 +160,13 @@ def create_default_config_file(output_path: str = 'training_config.yaml') -> Non
         },
         'checkpointing': {
             'checkpoint_dir': './model/checkpoints',
-            'save_every': 1,
+            'save_interval': 1,
             'keep_last_n': 3
         },
         'logging': {
             'log_dir': './logs',
-            'eval_every': 100,
-            'log_every': 10
+            'eval_interval': 100,
+            'log_interval': 10
         },
         'device': {
             'device': 'cuda',
