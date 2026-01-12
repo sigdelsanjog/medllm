@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gptmed"
-version = "0.3.4"
+version = "0.3.5"
 description = "A lightweight GPT-based language model framework for training custom question-answering models on any domain"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -70,6 +70,7 @@ packages = [
     "gptmed.model.configs",
     "gptmed.inference",
     "gptmed.training",
+    "gptmed.services",
     "gptmed.utils",
     "gptmed.configs",
     "gptmed.data",
