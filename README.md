@@ -19,27 +19,6 @@ A lightweight GPT-based language model framework for training custom question-an
 - 📦 **Lightweight**: Small model size suitable for edge deployment
 - 🛠️ **Complete Toolkit**: Includes tokenizer training, model training, and inference utilities
 
-## Table of Contents
-
-- [Features](#features)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Package Structure](#package-structure)
-  - [Core Modules](#core-modules)
-  - [Model Components](#model-components)
-  - [Training Components](#training-components)
-  - [Inference Components](#inference-components)
-  - [Data Processing](#data-processing)
-  - [Utilities](#utilities)
-- [Model Architecture](#model-architecture)
-- [Configuration](#configuration)
-- [Documentation](#documentation)
-- [Performance](#performance)
-- [Examples](#examples)
-- [Contributing](#contributing)
-- [License](#license)
-- [Support](#support)
-
 ## Installation
 
 ### From PyPI (Recommended)
@@ -166,134 +145,27 @@ config = TrainingConfig(
 )
 ```
 
-## Package Structure
-
-### Core Modules
-
-The `gptmed` package contains the following main modules:
-
-```
-gptmed/
-├── model/                  # Model architecture and configurations
-├── inference/              # Text generation and sampling
-├── training/               # Training loops and datasets
-├── tokenizer/              # Tokenizer training and data processing
-├── data/                   # Data parsers and formatters
-├── configs/                # Training configurations
-└── utils/                  # Utilities (checkpoints, logging)
-```
-
-### Model Components
-
-**`gptmed.model.architecture`** - GPT Transformer Implementation
-
-- `GPTTransformer` - Main model class
-- `TransformerBlock` - Individual transformer layers
-- `MultiHeadAttention` - Attention mechanism
-- `FeedForward` - Feed-forward networks
-- `RoPEPositionalEncoding` - Rotary position embeddings
-
-**`gptmed.model.configs`** - Model Configurations
-
-- `get_tiny_config()` - ~2M parameters (testing)
-- `get_small_config()` - ~10M parameters (recommended)
-- `get_medium_config()` - ~50M parameters (high quality)
-- `ModelConfig` - Custom configuration class
-
-### Training Components
-
-**`gptmed.training`** - Training Pipeline
-
-- `train.py` - Main training script (CLI: `gptmed-train`)
-- `Trainer` - Training loop with checkpointing
-- `TokenizedDataset` - PyTorch dataset for tokenized data
-- `create_dataloaders()` - DataLoader creation utilities
-
-**`gptmed.configs`** - Training Configurations
-
-- `TrainingConfig` - Training hyperparameters
-- `get_default_config()` - Default training settings
-- `get_quick_test_config()` - Fast testing configuration
-
-### Inference Components
-
-**`gptmed.inference`** - Text Generation
-
-- `TextGenerator` - Main generation class
-- `generator.py` - CLI command (CLI: `gptmed-generate`)
-- `sampling.py` - Sampling strategies (top-k, top-p, temperature)
-- `decoding_utils.py` - Decoding utilities
-- `GenerationConfig` - Generation parameters
-
-### Data Processing
-
-**`gptmed.tokenizer`** - Tokenizer Training & Data Processing
-
-- `train_tokenizer.py` - Train SentencePiece tokenizer
-- `tokenize_data.py` - Convert text to token sequences
-- SentencePiece BPE tokenizer support
-
-**`gptmed.data.parsers`** - Data Parsing & Formatting
-
-- `MedQuADParser` - XML Q&A parser (example)
-- `CausalTextFormatter` - Format Q&A pairs for training
-- `FormatConfig` - Formatting configuration
-
-### Utilities
-
-**`gptmed.utils`** - Helper Functions
-
-- `checkpoints.py` - Model checkpoint management
-- `logging.py` - Training metrics logging
-
----
-
-## Detailed Project Structure
+## Project Structure
 
 ```
 gptmed/
 ├── model/
-│   ├── architecture/
-│   │   ├── gpt.py              # GPT transformer model
-│   │   ├── attention.py        # Multi-head attention
-│   │   ├── feedforward.py      # Feed-forward networks
-│   │   └── embeddings.py       # Token + positional embeddings
-│   └── configs/
-│       └── model_config.py     # Model size configurations
+│   ├── architecture/      # GPT transformer implementation
+│   └── configs/           # Model configurations
 ├── inference/
-│   ├── generator.py            # Text generation (CLI command)
-│   ├── sampling.py             # Sampling strategies
-│   ├── decoding_utils.py       # Decoding utilities
-│   └── generation_config.py    # Generation parameters
+│   ├── generator.py       # Text generation
+│   └── sampling.py        # Sampling strategies
 ├── training/
-│   ├── train.py                # Main training script (CLI command)
-│   ├── trainer.py              # Training loop
-│   ├── dataset.py              # PyTorch dataset
-│   └── utils.py                # Training utilities
+│   ├── train.py          # Training script
+│   ├── trainer.py        # Training loop
+│   └── dataset.py        # Data loading
 ├── tokenizer/
-│   ├── train_tokenizer.py      # Train SentencePiece tokenizer
-│   └── tokenize_data.py        # Tokenize text data
-├── data/
-│   └── parsers/
-│       ├── medquad_parser.py   # Example XML parser
-│       └── text_formatter.py   # Q&A text formatter
+│   └── train_tokenizer.py # SentencePiece tokenizer
 ├── configs/
-│   └── train_config.py         # Training configurations
+│   └── train_config.py   # Training configurations
 └── utils/
-    ├── checkpoints.py          # Model checkpointing
-    └── logging.py              # Training logging
-```
-
-### Command-Line Interface
-
-The package provides two main CLI commands:
-
-```bash
-# Train a model
-gptmed-train --model-size small --num-epochs 10 --batch-size 16
-
-# Generate text
-gptmed-generate --prompt "Your question?" --max-length 100
+    ├── checkpoints.py    # Model checkpointing
+    └── logging.py        # Training logging
 ```
 
 ## Requirements
