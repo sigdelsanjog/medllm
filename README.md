@@ -1,23 +1,50 @@
 # GptMed 🤖
 
-A lightweight GPT-based language model framework for training custom question-answering models on any domain. This package provides a transformer-based GPT architecture that you can train on your own Q&A datasets - whether it's casual conversations, technical support, education, or any other domain.
-
+[![Downloads](https://static.pepy.tech/badge/gptmed)](https://pepy.tech/project/gptmed)
+[![Downloads/Month](https://static.pepy.tech/badge/gptmed/month)](https://pepy.tech/project/gptmed)
 [![PyPI version](https://badge.fury.io/py/gptmed.svg)](https://badge.fury.io/py/gptmed)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 📖 [Complete User Manual](USER_MANUAL.md) | [Quick Start](#quick-start)
+A lightweight GPT-based language model framework for training custom question-answering models on any domain. This package provides a transformer-based GPT architecture that you can train on your own Q&A datasets - whether it's casual conversations, technical support, education, or any other domain.
 
-> **New to GptMed?** Check out the [**step-by-step User Manual**](USER_MANUAL.md) for a complete guide on training your own model!
+## Citation
 
-## Features
+If you use this model in your research, please cite:
 
-- 🧠 **Custom GPT Architecture**: Lightweight transformer model for any Q&A domain
-- 🎯 **Domain-Agnostic**: Train on any question-answering dataset (casual chat, tech support, education, etc.)
-- ⚡ **Fast Inference**: Optimized for quick question answering
-- 🔧 **Flexible Training**: Easy to train on your own custom datasets
-- 📦 **Lightweight**: Small model size suitable for edge deployment
-- 🛠️ **Complete Toolkit**: Includes tokenizer training, model training, and inference utilities
+```bibtex
+@software{gptmed_2026,
+  author = {Sanjog Sigdel},
+  title = {GptMed: A custom causal question answering general purpose GPT Transformer Architecture Model},
+  year = {2026},
+  url = {https://github.com/sigdelsanjog/gptmed}
+}
+```
+
+## Table of Contents
+
+- [Installation](#installation)
+  - [From PyPI (Recommended)](#from-pypi-recommended)
+  - [From Source](#from-source)
+  - [With Optional Dependencies](#with-optional-dependencies)
+- [Quick Start](#quick-start)
+  - [Using the High-Level API](#using-the-high-level-api)
+  - [Inference (Generate Answers)](#inference-generate-answers)
+  - [Using Command Line](#using-command-line)
+  - [Training Your Own Model](#training-your-own-model)
+- [Model Architecture](#model-architecture)
+- [Configuration](#configuration)
+  - [Model Sizes](#model-sizes)
+  - [Training Configuration](#training-configuration)
+- [Project Structure](#project-structure)
+- [Requirements](#requirements)
+- [Documentation](#documentation)
+- [Performance](#performance)
+- [Examples](#examples)
+- [Contributing](#contributing)
+- [Citation](#citation)
+- [License](#license)
+- [Support](#support)
 
 ## Installation
 
@@ -49,6 +76,34 @@ pip install gptmed[dev,training]
 ```
 
 ## Quick Start
+
+### Using the High-Level API
+
+The easiest way to use GptMed is through the high-level API:
+
+```python
+import gptmed
+
+# 1. Create a training configuration
+gptmed.create_config('my_config.yaml')
+
+# 2. Edit my_config.yaml with your settings (data paths, model size, etc.)
+
+# 3. Train the model
+gptmed.train_from_config('my_config.yaml')
+
+# 4. Generate answers
+answer = gptmed.generate(
+    checkpoint='model/checkpoints/best_model.pt',
+    tokenizer='tokenizer/my_tokenizer.model',
+    prompt='What is machine learning?',
+    max_length=150,
+    temperature=0.7
+)
+print(answer)
+```
+
+For a complete API testing workflow, see the [gptmed-api folder](https://github.com/sigdelsanjog/gptmed/tree/main/gptmed-api) with ready-to-run examples.
 
 ### Inference (Generate Answers)
 
@@ -225,19 +280,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## Citation
-
-If you use this model in your research, please cite:
-
-```bibtex
-@software{llm_med_2026,
-  author = {Sanjog Sigdel},
-  title = {GptMed: A custom causal question answering general purpose GPT Transformer Architecture Model},
-  year = {2026},
-  url = {https://github.com/sigdelsanjog/gptmed}
-}
-```
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -247,16 +289,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - MedQuAD dataset creators
 - PyTorch team
 
-## Disclaimer
-
-⚠️ **Medical Disclaimer**: This model is for research and educational purposes only. It should NOT be used for actual medical diagnosis or treatment decisions. Always consult qualified healthcare professionals for medical advice.
-
 ## Support
 
-- � **[User Manual](USER_MANUAL.md)** - Complete step-by-step training guide
-- �📫 Issues: [GitHub Issues](https://github.com/sigdelsanjog/gptmed/issues)
+- 📫 [User Manual](USER_MANUAL.md)\*\* - Complete step-by-step training guide
+- 📫 Issues: [GitHub Issues](https://github.com/sigdelsanjog/gptmed/issues)
 - 💬 Discussions: [GitHub Discussions](https://github.com/sigdelsanjog/gptmed/discussions)
-- 📧 Email: sanjog.sigdel@ku.edu.np
+- 📧 Email: sigdelsanjog@gmail.com | sanjog.sigdel@ku.edu.np
 
 ## Changelog
 
@@ -264,4 +302,4 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ---
 
-Made with ❤️ for learning purpose
+#### Made with ❤️ from Nepal
