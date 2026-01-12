@@ -76,6 +76,15 @@ def validate_config(config: Dict[str, Any]) -> None:
         raise ValueError("batch_size must be positive")
     if config['training']['learning_rate'] <= 0:
         raise ValueError("learning_rate must be positive")
+    
+    # Validate device
+    valid_devices = ['cuda', 'cpu', 'auto']
+    device_value = config.get('device', {}).get('device', 'cuda').lower()
+    if device_value not in valid_devices:
+        raise ValueError(
+            f"Invalid device: {device_value}. "
+            f"Must be one of {valid_devices}"
+        )
 
 
 def config_to_args(config: Dict[str, Any]) -> Dict[str, Any]:
@@ -169,7 +178,7 @@ def create_default_config_file(output_path: str = 'training_config.yaml') -> Non
             'log_interval': 10
         },
         'device': {
-            'device': 'cuda',
+            'device': 'cuda',  # Options: 'cuda', 'cpu', or 'auto'
             'seed': 42
         },
         'advanced': {

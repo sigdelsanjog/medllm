@@ -39,6 +39,8 @@ from gptmed.configs.train_config import TrainingConfig
 from gptmed.training.dataset import create_dataloaders
 from gptmed.training.trainer import Trainer
 from gptmed.inference.generator import TextGenerator
+from gptmed.services.device_manager import DeviceManager
+from gptmed.services.training_service import TrainingService
 
 
 def create_config(output_path: str = 'training_config.yaml') -> None:
@@ -58,7 +60,11 @@ def create_config(output_path: str = 'training_config.yaml') -> None:
     create_default_config_file(output_path)
 
 
-def train_from_config(config_path: str, verbose: bool = True) -> Dict[str, Any]:
+def train_from_config(
+    config_path: str, 
+    verbose: bool = True, 
+    device: Optional[str] = None
+) -> Dict[str, Any]:
     """
     Train a GPT model using a YAML configuration file.
     
@@ -68,6 +74,8 @@ def train_from_config(config_path: str, verbose: bool = True) -> Dict[str, Any]:
     Args:
         config_path: Path to YAML configuration file
         verbose: Whether to print training progress (default: True)
+        device: Device to use ('cuda', 'cpu', or 'auto'). If None, uses config value.
+                'auto' will select best available device.
     
     Returns:
         Dictionary with training results:
@@ -82,13 +90,16 @@ def train_from_config(config_path: str, verbose: bool = True) -> Dict[str, Any]:
         >>> gptmed.create_config('config.yaml')
         >>> # ... edit config.yaml ...
         >>> 
-        >>> # Train the model
-        >>> results = gptmed.train_from_config('config.yaml')
+        >>> # Train the model on CPU
+        >>> results = gptmed.train_from_config('config.yaml', device='cpu')
         >>> print(f"Best model: {results['best_checkpoint']}")
+        >>> 
+        >>> # Train with auto device selection
+        >>> results = gptmed.train_from_config('config.yaml', device='auto')
     
     Raises:
         FileNotFoundError: If config file or data files don't exist
-        ValueError: If configuration is invalid
+        ValueError: If configuration is invalid or device is invalid
     """
     if verbose:
         print("=" * 60)
@@ -111,47 +122,42 @@ def train_from_config(config_path: str, verbose: bool = True) -> Dict[str, Any]:
     # Convert to arguments
     args = config_to_args(config)
     
-    # Import here to avoid circular imports
-    import random
-    import numpy as np
+    # Override device if provided as parameter
+    if device is not None:
+        # Validate and normalize device
+        device = DeviceManager.validate_device(device)
+        if verbose:
+            print(f"\n⚙️  Device override: {device} (from parameter)")
+        args['device'] = device
+    
+    # Create DeviceManager with the selected device
+    device_manager = DeviceManager(
+        preferred_device=args['device'],
+        allow_fallback=True
+    )
+    
+    # Print device information
+    device_manager.print_device_info(verbose=verbose)
+    
+    # Create TrainingService with DeviceManager
+    training_service = TrainingService(
+        device_manager=device_manager,
+        verbose=verbose
+    )
     
     # Set random seed
-    def set_seed(seed: int):
-        random.seed(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
-        if torch.cuda.is_available():
-            torch.cuda.manual_seed(seed)
-            torch.cuda.manual_seed_all(seed)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
-    
     if verbose:
         print(f"\n🎲 Setting random seed: {args['seed']}")
-    set_seed(args['seed'])
+    training_service.set_seed(args['seed'])
     
-    # Check device
-    device = args['device']
-    if device == 'cuda' and not torch.cuda.is_available():
-        if verbose:
-            print("⚠️  CUDA not available, using CPU")
-        device = 'cpu'
+    # Get actual device to use
+    actual_device = device_manager.get_device()
     
     # Load model config
     if verbose:
         print(f"\n🧠 Creating model: {args['model_size']}")
     
-    if args['model_size'] == 'tiny':
-        model_config = get_tiny_config()
-    elif args['model_size'] == 'small':
-        model_config = get_small_config()
-    elif args['model_size'] == 'medium':
-        model_config = get_medium_config()
-    else:
-        raise ValueError(f"Unknown model size: {args['model_size']}")
-    
-    # Create model
-    model = GPTTransformer(model_config)
+    model = training_service.create_model(args['model_size'])
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     
     if verbose:
@@ -159,7 +165,7 @@ def train_from_config(config_path: str, verbose: bool = True) -> Dict[str, Any]:
         print(f"  Parameters: {total_params:,}")
         print(f"  Memory: ~{total_params * 4 / 1024 / 1024:.2f} MB")
     
-    # Load data
+    # Load data using TrainingService
     if verbose:
         print(f"\n📊 Loading data...")
         print(f"  Train: {args['train_data']}")
@@ -176,7 +182,7 @@ def train_from_config(config_path: str, verbose: bool = True) -> Dict[str, Any]:
         print(f"  Train batches: {len(train_loader)}")
         print(f"  Val batches: {len(val_loader)}")
     
-    # Create training config
+    # Create training config with actual device
     train_config = TrainingConfig(
         batch_size=args['batch_size'],
         learning_rate=args['learning_rate'],
@@ -195,7 +201,7 @@ def train_from_config(config_path: str, verbose: bool = True) -> Dict[str, Any]:
         val_data_path=args['val_data'],
         checkpoint_dir=args['checkpoint_dir'],
         log_dir=args['log_dir'],
-        device=device,
+        device=actual_device,  # Use actual device from DeviceManager
         seed=args['seed'],
     )
     
@@ -213,69 +219,16 @@ def train_from_config(config_path: str, verbose: bool = True) -> Dict[str, Any]:
         weight_decay=args['weight_decay'],
     )
     
-    # Create trainer
-    if verbose:
-        print(f"\n🎯 Initializing trainer...")
-    
-    trainer = Trainer(
+    # Execute training using TrainingService
+    results = training_service.execute_training(
         model=model,
         train_loader=train_loader,
         val_loader=val_loader,
         optimizer=optimizer,
-        config=train_config,
-        device=device,
+        train_config=train_config,
+        device=actual_device,
+        model_config_dict=model.config.to_dict()
     )
-    
-    # Resume if requested
-    if args['resume_from'] is not None:
-        if verbose:
-            print(f"\n📥 Resuming from checkpoint: {args['resume_from']}")
-        trainer.resume_from_checkpoint(Path(args['resume_from']))
-    
-    # Start training
-    if verbose:
-        print(f"\n{'='*60}")
-        print("🚀 Starting Training!")
-        print(f"{'='*60}\n")
-    
-    try:
-        trainer.train()
-    except KeyboardInterrupt:
-        if verbose:
-            print("\n\n⏸️  Training interrupted by user")
-            print("💾 Saving checkpoint...")
-        trainer.checkpoint_manager.save_checkpoint(
-            model=model,
-            optimizer=optimizer,
-            step=trainer.global_step,
-            epoch=trainer.current_epoch,
-            val_loss=trainer.best_val_loss,
-            model_config=model_config.to_dict(),
-            train_config=train_config.to_dict(),
-        )
-        if verbose:
-            print("✓ Checkpoint saved. Resume with resume_from in config.")
-    
-    # Return results
-    best_checkpoint = Path(train_config.checkpoint_dir) / "best_model.pt"
-    
-    results = {
-        'best_checkpoint': str(best_checkpoint),
-        'final_val_loss': trainer.best_val_loss,
-        'total_epochs': trainer.current_epoch,
-        'checkpoint_dir': train_config.checkpoint_dir,
-        'log_dir': train_config.log_dir,
-    }
-    
-    if verbose:
-        print(f"\n{'='*60}")
-        print("✅ Training Complete!")
-        print(f"{'='*60}")
-        print(f"\n📁 Results:")
-        print(f"  Best checkpoint: {results['best_checkpoint']}")
-        print(f"  Best val loss: {results['final_val_loss']:.4f}")
-        print(f"  Total epochs: {results['total_epochs']}")
-        print(f"  Logs: {results['log_dir']}")
     
     return results
 
