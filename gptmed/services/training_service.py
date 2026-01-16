@@ -225,9 +225,11 @@ class TrainingService:
             print("🚀 Starting Training!")
             print(f"{'='*60}\n")
         
+        interrupted = False
         try:
             trainer.train()
         except KeyboardInterrupt:
+            interrupted = True
             if self.verbose:
                 print("\n\n⏸️  Training interrupted by user")
                 print("💾 Saving checkpoint...")
@@ -243,51 +245,118 @@ class TrainingService:
             if self.verbose:
                 print("✓ Checkpoint saved. Resume with resume_from in config.")
         
+        # Generate observability reports (on BOTH normal and abnormal exit)
+        self._generate_observability_reports(
+            observers=observers,
+            train_config=train_config,
+            trainer=trainer,
+            interrupted=interrupted,
+        )
+        
         # Return results
-        best_checkpoint = Path(train_config.checkpoint_dir) / "best_model.pt"
+        final_checkpoint = Path(train_config.checkpoint_dir) / "final_model.pt"
         
         results = {
-            'best_checkpoint': str(best_checkpoint),
+            'final_checkpoint': str(final_checkpoint),
+            'best_checkpoint': str(final_checkpoint),  # Alias for backward compatibility
             'final_val_loss': trainer.best_val_loss,
             'total_epochs': trainer.current_epoch,
+            'total_steps': trainer.global_step,
             'checkpoint_dir': train_config.checkpoint_dir,
             'log_dir': train_config.log_dir,
+            'interrupted': interrupted,
         }
         
-        # Get metrics tracker if available and generate reports
+        # Get training issues from metrics tracker
         metrics_tracker = self._get_metrics_tracker(observers)
         if metrics_tracker:
-            # Export metrics
-            metrics_tracker.export_to_csv()
-            metrics_tracker.export_to_json()
-            
-            # Try to plot (will skip if matplotlib not installed)
-            try:
-                metrics_tracker.plot_loss_curves()
-            except Exception as e:
-                if self.verbose:
-                    print(f"   (Could not generate plots: {e})")
-            
-            # Check for issues
-            issues = metrics_tracker.detect_issues()
-            results['training_issues'] = issues
-            
-            if self.verbose:
-                print(f"\n📋 Training Health Check:")
-                for issue in issues:
-                    print(f"   {issue}")
+            results['training_issues'] = metrics_tracker.detect_issues()
         
         if self.verbose:
+            status = "⏸️  Training Interrupted" if interrupted else "✅ Training Complete!"
             print(f"\n{'='*60}")
-            print("✅ Training Complete!")
+            print(status)
             print(f"{'='*60}")
             print(f"\n📁 Results:")
-            print(f"  Best checkpoint: {results['best_checkpoint']}")
+            print(f"  Final checkpoint: {results['final_checkpoint']}")
             print(f"  Best val loss: {results['final_val_loss']:.4f}")
+            print(f"  Total steps: {results['total_steps']}")
             print(f"  Total epochs: {results['total_epochs']}")
             print(f"  Logs: {results['log_dir']}")
         
         return results
+    
+    def _generate_observability_reports(
+        self,
+        observers: List[TrainingObserver],
+        train_config: TrainingConfig,
+        trainer,
+        interrupted: bool = False,
+    ) -> None:
+        """
+        Generate observability reports from metrics tracker.
+        
+        Called on both normal completion and abnormal exit (Ctrl+C).
+        
+        Args:
+            observers: List of training observers
+            train_config: Training configuration
+            trainer: Trainer instance
+            interrupted: Whether training was interrupted
+        """
+        metrics_tracker = self._get_metrics_tracker(observers)
+        
+        if not metrics_tracker:
+            if self.verbose:
+                print("\n⚠️  No MetricsTracker found - skipping observability reports")
+            return
+        
+        if self.verbose:
+            print(f"\n{'='*60}")
+            print("📊 Generating Observability Reports")
+            print(f"{'='*60}")
+        
+        try:
+            # Export metrics to CSV
+            csv_path = metrics_tracker.export_to_csv()
+            if self.verbose:
+                print(f"   ✓ CSV exported: {csv_path}")
+        except Exception as e:
+            if self.verbose:
+                print(f"   ✗ CSV export failed: {e}")
+        
+        try:
+            # Export metrics to JSON
+            json_path = metrics_tracker.export_to_json()
+            if self.verbose:
+                print(f"   ✓ JSON exported: {json_path}")
+        except Exception as e:
+            if self.verbose:
+                print(f"   ✗ JSON export failed: {e}")
+        
+        try:
+            # Generate loss curve plots
+            plot_path = metrics_tracker.plot_loss_curves()
+            if plot_path and self.verbose:
+                print(f"   ✓ Loss curves plotted: {plot_path}")
+        except ImportError:
+            if self.verbose:
+                print(f"   ⚠️  Plotting skipped (matplotlib not installed)")
+        except Exception as e:
+            if self.verbose:
+                print(f"   ✗ Plotting failed: {e}")
+        
+        # Training health check
+        issues = metrics_tracker.detect_issues()
+        if self.verbose:
+            print(f"\n📋 Training Health Check:")
+            for issue in issues:
+                print(f"   {issue}")
+        
+        # Add interrupted notice if applicable
+        if interrupted and self.verbose:
+            print(f"\n⚠️  Note: Training was interrupted at step {trainer.global_step}")
+            print(f"   Reports reflect partial training data only.")
     
     def _create_default_observers(self, train_config: TrainingConfig) -> List[TrainingObserver]:
         """

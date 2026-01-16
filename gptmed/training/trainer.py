@@ -420,7 +420,7 @@ class Trainer:
             "best_val_loss": self.best_val_loss,
             "total_steps": self.global_step,
             "final_epoch": self.current_epoch,
-            "best_checkpoint": str(self.checkpoint_manager.checkpoint_dir / "best_model.pt"),
+            "final_checkpoint": str(self.checkpoint_manager.checkpoint_dir / "final_model.pt"),
         }
         self.observer_manager.notify_train_end(final_metrics)
 

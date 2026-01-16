@@ -108,7 +108,7 @@ class CheckpointManager:
         # Save as best if applicable
         if is_best or val_loss < self.best_val_loss:
             self.best_val_loss = val_loss
-            best_path = self.checkpoint_dir / "best_model.pt"
+            best_path = self.checkpoint_dir / "final_model.pt"
             torch.save(checkpoint, best_path)
             print(f"Best model saved: {best_path} (val_loss: {val_loss:.4f})")
 
