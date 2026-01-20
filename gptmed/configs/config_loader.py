@@ -35,6 +35,14 @@ def load_yaml_config(config_path: str) -> Dict[str, Any]:
         except yaml.YAMLError as e:
             raise ValueError(f"Error parsing YAML configuration: {e}")
     
+    # If redis section is missing, add defaults
+    if 'redis' not in config:
+        config['redis'] = {
+            'host': 'localhost',
+            'port': 6379,
+            'db': 0,
+            'password': None
+        }
     return config
 
 
@@ -86,6 +94,17 @@ def validate_config(config: Dict[str, Any]) -> None:
             f"Must be one of {valid_devices}"
         )
 
+    # Validate redis config
+    redis_cfg = config.get('redis', {})
+    if not isinstance(redis_cfg, dict):
+        raise ValueError("Redis config must be a dictionary.")
+    if 'host' not in redis_cfg or not redis_cfg['host']:
+        raise ValueError("Redis config missing 'host'.")
+    if 'port' not in redis_cfg or not isinstance(redis_cfg['port'], int):
+        raise ValueError("Redis config missing or invalid 'port'.")
+    if 'db' not in redis_cfg or not isinstance(redis_cfg['db'], int):
+        raise ValueError("Redis config missing or invalid 'db'.")
+
 
 def config_to_args(config: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -135,6 +154,14 @@ def config_to_args(config: Dict[str, Any]) -> Dict[str, Any]:
         'max_steps': config.get('advanced', {}).get('max_steps', -1),
         'resume_from': config.get('advanced', {}).get('resume_from'),
         'quick_test': config.get('advanced', {}).get('quick_test', False),
+
+        # Redis
+        'redis_config': config.get('redis', {
+            'host': 'localhost',
+            'port': 6379,
+            'db': 0,
+            'password': None
+        }),
     }
     
     return args
@@ -185,6 +212,12 @@ def create_default_config_file(output_path: str = 'training_config.yaml') -> Non
             'max_steps': -1,
             'resume_from': None,
             'quick_test': False
+        },
+        'redis': {
+            'host': 'localhost',
+            'port': 6379,
+            'db': 0,
+            'password': None
         }
     }
     

@@ -4,18 +4,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gptmed"
-version = "0.4.1"
+version = "0.5.0"
 description = "A lightweight GPT-based language model framework for training custom question-answering models on any domain"
 readme = "README.md"
 requires-python = ">=3.8"
 license = "MIT"
-authors = [
-    {name = "Sanjog Sigdel", email = "sigdelsanjog@gmail.com"}
-]
-maintainers = [
-    {name = "Sanjog Sigdel", email = "sigdelsanjog@gmail.com"}
-]
 keywords = ["nlp", "language-model", "transformer", "gpt", "pytorch", "qa", "question-answering", "training", "deep-learning", "custom-model"]
+
+authors=[
+{name = "Sanjog Sigdel", email = "sigdelsanjog@gmail.com"},
+{name = "Sanjog Sigdel", email = "sanjog.sigdel@ku.edu.np"}
+]
 
 classifiers = [
     "Development Status :: 4 - Beta",

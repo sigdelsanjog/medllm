@@ -21,6 +21,7 @@ WHAT TO LOOK FOR:
 - Loss = NaN → Exploding gradients
 """
 
+
 import json
 import math
 import time
@@ -35,6 +36,9 @@ from gptmed.observability.base import (
     ValidationMetrics,
     GradientMetrics,
 )
+
+# Import the interface but not the Redis implementation directly (for loose coupling)
+from gptmed.observability.redis_metrics_storage import MetricsStorageInterface
 
 
 @dataclass
@@ -79,6 +83,7 @@ class MetricsTracker(TrainingObserver):
         moving_avg_window: int = 100,
         log_interval: int = 10,
         verbose: bool = True,
+        storage_backend: Optional[MetricsStorageInterface] = None,
     ):
         """
         Initialize MetricsTracker.
@@ -91,26 +96,31 @@ class MetricsTracker(TrainingObserver):
             verbose: Whether to print progress
         """
         super().__init__(name="MetricsTracker")
-        
+
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
-        
+
         self.experiment_name = experiment_name
         self.moving_avg_window = moving_avg_window
         self.log_interval = log_interval
         self.verbose = verbose
-        
+
+        # Optional metrics storage backend (e.g., Redis)
+        self.storage_backend = storage_backend
+
         # Initialize storage
         self._reset_storage()
-        
+
         # File paths
         self.metrics_file = self.log_dir / f"{experiment_name}_metrics.jsonl"
         self.summary_file = self.log_dir / f"{experiment_name}_summary.json"
-        
+
         if self.verbose:
             print(f"📊 MetricsTracker initialized")
             print(f"   Log directory: {self.log_dir}")
             print(f"   Moving average window: {moving_avg_window}")
+            if self.storage_backend:
+                print(f"   Using external metrics storage: {type(self.storage_backend).__name__}")
     
     def _reset_storage(self) -> None:
         """Reset all metric storage."""
@@ -163,53 +173,69 @@ class MetricsTracker(TrainingObserver):
     def on_step(self, metrics: StepMetrics) -> None:
         """Called after each training step."""
         timestamp = time.time() - self.start_time if self.start_time else 0
-        
+
         # Store loss
         self.train_losses.append(LossCurvePoint(
             step=metrics.step,
             loss=metrics.loss,
             timestamp=timestamp,
         ))
-        
+
         # Update moving average buffer
         self._loss_buffer.append(metrics.loss)
-        
+
         # Store learning rate
         self.learning_rates.append((metrics.step, metrics.learning_rate))
-        
+
         # Store gradient norm
         self.gradient_norms.append((metrics.step, metrics.grad_norm))
-        
+
         # Store perplexity
         self.train_perplexities.append((metrics.step, metrics.perplexity))
-        
+
         # Log to file periodically
         if metrics.step % self.log_interval == 0:
             self._log_step(metrics, timestamp)
+            # Also log to external storage if available
+            if self.storage_backend:
+                self.storage_backend.save_step_metrics({
+                    "type": "step",
+                    "timestamp": timestamp,
+                    "moving_avg_loss": self.get_moving_average(),
+                    **metrics.to_dict(),
+                })
     
     def on_validation(self, metrics: ValidationMetrics) -> None:
         """Called after validation."""
         timestamp = time.time() - self.start_time if self.start_time else 0
-        
+
         # Store validation loss
         self.val_losses.append(LossCurvePoint(
             step=metrics.step,
             loss=metrics.val_loss,
             timestamp=timestamp,
         ))
-        
+
         # Store validation perplexity
         self.val_perplexities.append((metrics.step, metrics.val_perplexity))
-        
+
         # Track best
         if metrics.val_loss < self.best_val_loss:
             self.best_val_loss = metrics.val_loss
             self.best_val_step = metrics.step
             if self.verbose:
                 print(f"   ⭐ New best val_loss: {metrics.val_loss:.4f}")
-        
+
         # Log to file
         self._log_validation(metrics, timestamp)
+        # Also log to external storage if available
+        if self.storage_backend:
+            self.storage_backend.save_validation_metrics({
+                "type": "validation",
+                "timestamp": timestamp,
+                "is_best": metrics.val_loss <= self.best_val_loss,
+                **metrics.to_dict(),
+            })
     
     def on_train_end(self, final_metrics: Dict[str, Any]) -> None:
         """Called when training completes."""

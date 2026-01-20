@@ -139,6 +139,14 @@ def train_from_config(
     # Print device information
     device_manager.print_device_info(verbose=verbose)
     
+    # Optionally enable Redis metrics storage
+    from gptmed.observability.redis_metrics_storage import RedisMetricsStorage
+    from gptmed.observability.metrics_tracker import MetricsTracker
+
+    redis_enabled = False
+    if 'redis' in config and config['redis'].get('enabled', False):
+        redis_enabled = True
+
     # Create TrainingService with DeviceManager
     training_service = TrainingService(
         device_manager=device_manager,
@@ -220,6 +228,23 @@ def train_from_config(
         weight_decay=args['weight_decay'],
     )
     
+
+    # If Redis is enabled, inject RedisMetricsStorage into MetricsTracker
+    observers = None
+    if redis_enabled:
+        if verbose:
+            print("\n🔗 Enabling Redis metrics storage...")
+        observers = [
+            MetricsTracker(
+                log_dir=train_config.log_dir,
+                experiment_name="gptmed_training",
+                moving_avg_window=100,
+                log_interval=train_config.log_interval,
+                verbose=verbose,
+                storage_backend=RedisMetricsStorage(),
+            )
+        ]
+
     # Execute training using TrainingService
     results = training_service.execute_training(
         model=model,
@@ -228,9 +253,9 @@ def train_from_config(
         optimizer=optimizer,
         train_config=train_config,
         device=actual_device,
-        model_config_dict=model.config.to_dict()
+        model_config_dict=model.config.to_dict(),
+        observers=observers,
     )
-    
     return results
 
 
