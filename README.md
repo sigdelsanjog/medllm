@@ -389,7 +389,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for version history.
+[Full Changelog](https://github.com/sigdelsanjog/gptmed/blob/main/CHANGELOG.md)
 
 ---
 

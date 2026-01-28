@@ -3,7 +3,7 @@ import sys
 
 def startproject(project_name):
     if not project_name.isidentifier():
-        print("Invalid project name.")
+        print("Invalid project name. Your project name must be a valid Python identifier. Donot use hyphens or spaces. Use underscores instead.")
         sys.exit(1)
     if os.path.exists(project_name):
         print(f"Directory '{project_name}' already exists.")

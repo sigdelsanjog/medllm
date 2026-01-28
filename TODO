@@ -1,0 +1,4 @@
+1. Fix this error:  gptmed::gptmed startproject test-cli 
+Error: Invalid project name. - 
+
+turns out hyphens are not allowed in python identifiers.

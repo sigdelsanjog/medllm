@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.3] - 2026-01-28
+
+### Changed
+
+- CLI: Improved project name validation in `startproject` to match Django's convention. Project names with dashes (-) are now disallowed; only valid Python identifiers are accepted.
+
+---
+
 ## [0.4.0] - 2026-01-17
 
 ### Added
