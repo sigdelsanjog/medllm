@@ -53,6 +53,7 @@ class TokenDataset(Dataset):
             raise FileNotFoundError(f"Data file not found: {data_file}")
         
         logger.info(f"Loading tokens from {data_file}...")
+        logger.info(f"File size: {data_file.stat().st_size / 1e6:.2f} MB")
         
         num_invalid = 0
         with open(data_file, 'r', encoding='utf-8') as f:
@@ -92,8 +93,13 @@ class TokenDataset(Dataset):
         """Create training samples from token stream"""
         self.samples = []
         
+        logger.info(f"Total tokens loaded: {len(self.tokens)}")
+        logger.info(f"Max sequence length: {self.max_seq_len}")
+        logger.info(f"Required tokens for 1 sample: {self.max_seq_len + 1}")
+        
         if len(self.tokens) < self.max_seq_len + 1:
-            logger.warning(f"Total tokens ({len(self.tokens)}) < max_seq_len + 1 ({self.max_seq_len + 1})")
+            logger.error(f"ERROR: Total tokens ({len(self.tokens)}) < required ({self.max_seq_len + 1})")
+            logger.error("Cannot create any training samples!")
             return
         
         # Sliding window to create samples
@@ -189,21 +195,27 @@ def get_data_loaders(
         generator=torch.Generator().manual_seed(42)
     )
     
+    # Use GPU memory pinning only if CUDA is available
+    pin_memory = torch.cuda.is_available()
+    logger.info(f"pin_memory enabled: {pin_memory}")
+    
     # Create data loaders
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
         shuffle=True,
-        num_workers=num_workers,
-        pin_memory=True,
+        num_workers=0,  # Disable multiprocessing for debugging
+        pin_memory=pin_memory,  # GPU memory pinning
+        drop_last=True,  # Drop incomplete batches
     )
     
     val_loader = DataLoader(
         val_dataset,
         batch_size=batch_size,
         shuffle=False,
-        num_workers=num_workers,
-        pin_memory=True,
+        num_workers=0,  # Disable multiprocessing for debugging
+        pin_memory=pin_memory,  # GPU memory pinning
+        drop_last=False,
     )
     
     logger.info(f"Train: {len(train_dataset)}, Validation: {len(val_dataset)}")

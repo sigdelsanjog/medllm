@@ -46,10 +46,19 @@ def train_model(
     from framework.conversation.training.train import Trainer
     from framework.conversation.model.configs.model_config import ConversationModelConfig
     
-    # Fallback to CPU if CUDA not available
-    if device == 'cuda' and not torch.cuda.is_available():
-        logger.warning("CUDA not available, falling back to CPU")
-        device = 'cpu'
+    # Ensure CUDA is used if available
+    device_obj = torch.device(device)
+    if device_obj.type == 'cuda':
+        if torch.cuda.is_available():
+            logger.info("✓ CUDA is available - GPU training will be used")
+        else:
+            logger.error("ERROR: CUDA requested but not available!")
+            logger.info("Available devices: CPU only")
+            raise RuntimeError("CUDA not available but requested")
+    else:
+        logger.warning(f"⚠ Using CPU (device={device})")
+        if torch.cuda.is_available():
+            logger.warning("⚠ GPU is available but not configured! Use --device cuda for faster training")
     
     logger.info(f"Starting model training on {device.upper()}...")
     
@@ -88,7 +97,8 @@ def inference_model(
     )
     
     # Fallback to CPU if CUDA not available
-    if device == 'cuda' and not torch.cuda.is_available():
+    device_obj = torch.device(device)
+    if device_obj.type == 'cuda' and not torch.cuda.is_available():
         logger.warning("CUDA not available, falling back to CPU")
         device = 'cpu'
     
@@ -153,7 +163,7 @@ def test_model(checkpoint_dir: Optional[str] = None):
         InferenceConfig
     )
     
-    # Use CPU for testing if GPU not available
+    # Use CUDA for testing if GPU available, otherwise CPU
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     
     if not checkpoint_dir:
@@ -241,8 +251,7 @@ def main():
     train_parser.add_argument(
         '--device', 
         default='cuda', 
-        choices=['cuda', 'cpu'],
-        help='Device to train on'
+        help='Device to train on (e.g., cuda, cuda:0, cpu)'
     )
     
     # Inference command
@@ -258,8 +267,7 @@ def main():
     infer_parser.add_argument(
         '--device',
         default='cuda',
-        choices=['cuda', 'cpu'],
-        help='Device to use'
+        help='Device to use (e.g., cuda, cuda:0, cpu)'
     )
     
     # Test command

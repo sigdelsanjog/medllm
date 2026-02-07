@@ -11,7 +11,7 @@ from .attention import MultiHeadAttention
 from .feedforward import FeedForwardNetwork
 
 
-class ransformerDecoderBlock(nn.Module):
+class TransformerDecoderBlock(nn.Module):
     """
     Single Transformer Decoder Block
     

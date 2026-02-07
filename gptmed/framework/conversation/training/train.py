@@ -39,12 +39,29 @@ class Trainer:
         """
         self.config = config
         
-        # Validate device availability
-        if config.device == 'cuda' and not torch.cuda.is_available():
-            logger.warning("CUDA not available, falling back to CPU")
-            config.device = 'cpu'
-        
+        # Create torch device object (handles both 'cuda' and 'cuda:0')
         self.device = torch.device(config.device)
+        
+        # Validate device availability
+        if self.device.type == 'cuda':
+            if not torch.cuda.is_available():
+                raise RuntimeError("CUDA requested but not available!")
+            # Don't call torch.cuda.init() - let PyTorch handle it automatically
+        
+        # Log device info
+        logger.info(f"Device: {self.device}")
+        if torch.cuda.is_available():
+            logger.info(f"CUDA available: True")
+            logger.info(f"CUDA device: {torch.cuda.get_device_name(0)}")
+            logger.info(f"CUDA total memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")
+            logger.info(f"CUDA currently using: {torch.cuda.memory_allocated() / 1e9:.2f} GB")
+            
+            if self.device.type == 'cuda':
+                logger.info("✓ GPU TRAINING ENABLED")
+            else:
+                logger.warning("⚠ Using CPU even though CUDA is available!")
+        else:
+            logger.warning("CUDA not available - using CPU (this will be slow!)")
         
         # Create checkpoint directory
         Path(config.checkpoint_dir).mkdir(parents=True, exist_ok=True)
@@ -59,6 +76,12 @@ class Trainer:
             max_seq_len=config.max_seq_len,
             dropout=config.dropout,
         ).to(self.device)
+        
+        # Verify model is on correct device
+        model_device = next(self.model.parameters()).device
+        logger.info(f"Model successfully moved to: {model_device}")
+        if model_device.type != self.device.type:
+            raise RuntimeError(f"Model device mismatch! Expected {self.device}, got {model_device}")
         
         # Count parameters
         total_params = sum(p.numel() for p in self.model.parameters())
@@ -107,11 +130,24 @@ class Trainer:
         num_batches = 0
         
         logger.info("Starting training epoch...")
+        logger.info(f"Total batches to process: {len(train_loader)}")
         
         for batch_idx, (input_ids, target_ids) in enumerate(train_loader):
             try:
+                # Log first batch for debugging
+                if batch_idx == 0:
+                    logger.info(f"First batch shapes - input_ids: {input_ids.shape}, target_ids: {target_ids.shape}")
+                    logger.info(f"Before device transfer - input_ids device: {input_ids.device}")
+                
                 input_ids = input_ids.to(self.device)
                 target_ids = target_ids.to(self.device)
+                
+                # Verify tensors are on correct device
+                if batch_idx == 0:
+                    logger.info(f"After device transfer - input_ids device: {input_ids.device}")
+                    logger.info(f"Model device: {next(self.model.parameters()).device}")
+                    if torch.cuda.is_available():
+                        logger.info(f"CUDA memory allocated: {torch.cuda.memory_allocated() / 1e9:.2f} GB")
                 
                 # Verify shapes before forward pass
                 if input_ids.dim() != 2 or target_ids.dim() != 2:
