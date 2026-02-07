@@ -53,6 +53,8 @@ class SimplifiedTokenizedRecord:
     filename: str
     tokens: List[int]  # Token IDs
     token_count: int
+    word_count: int  # Number of words in original text
+    character_count: int  # Number of characters in original text
     tokenizer_method: str
     status: str
 
@@ -168,12 +170,18 @@ class ParallelJSONLTokenizer:
             filename = record.get('filename', f'document_{index}')
             text = record.get('text', '')
             
+            # Calculate text statistics
+            word_count = len(text.split()) if text else 0
+            character_count = len(text) if text else 0
+            
             if not text or not isinstance(text, str) or len(text.strip()) < 10:
                 return (
                     SimplifiedTokenizedRecord(
                         filename=filename,
                         tokens=[],
                         token_count=0,
+                        word_count=word_count,
+                        character_count=character_count,
                         tokenizer_method=self.method,
                         status='empty_or_invalid_text'
                     ),
@@ -198,6 +206,8 @@ class ParallelJSONLTokenizer:
                     filename=filename,
                     tokens=tokens,
                     token_count=len(tokens),
+                    word_count=word_count,
+                    character_count=character_count,
                     tokenizer_method=self.method,
                     status='success'
                 ),
@@ -206,11 +216,16 @@ class ParallelJSONLTokenizer:
             
         except Exception as e:
             self.logger.error(f"Error tokenizing {record.get('filename', 'unknown')}: {str(e)}")
+            text = record.get('text', '')
+            word_count = len(text.split()) if text else 0
+            character_count = len(text) if text else 0
             return (
                 SimplifiedTokenizedRecord(
                     filename=record.get('filename', f'document_{index}'),
                     tokens=[],
                     token_count=0,
+                    word_count=word_count,
+                    character_count=character_count,
                     tokenizer_method=self.method,
                     status=f'error: {str(e)}'
                 ),
@@ -231,6 +246,62 @@ class ParallelJSONLTokenizer:
             return True
         except Exception as e:
             self.logger.error(f"Error saving merged JSONL: {str(e)}")
+            return False
+    
+    def save_token_summary(self, records: List[SimplifiedTokenizedRecord]) -> bool:
+        """Save token statistics summary to JSON file"""
+        try:
+            successful = [r for r in records if r.status == 'success']
+            
+            # Calculate statistics
+            total_tokens = sum(r.token_count for r in successful)
+            total_words = sum(r.word_count for r in successful)
+            total_characters = sum(r.character_count for r in successful)
+            avg_tokens_per_file = total_tokens / len(successful) if successful else 0
+            avg_words_per_file = total_words / len(successful) if successful else 0
+            avg_chars_per_file = total_characters / len(successful) if successful else 0
+            
+            # Build per-file summary
+            file_summaries = []
+            for record in records:
+                file_summaries.append({
+                    'filename': record.filename,
+                    'tokens': record.token_count,
+                    'words': record.word_count,
+                    'characters': record.character_count,
+                    'status': record.status,
+                })
+            
+            # Overall statistics
+            summary = {
+                'metadata': {
+                    'tokenizer_method': self.method,
+                    'tokenizer_model': self.model_name,
+                    'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
+                },
+                'overall_statistics': {
+                    'total_files': len(records),
+                    'successfully_processed': len(successful),
+                    'failed': len(records) - len(successful),
+                    'total_tokens': total_tokens,
+                    'total_words': total_words,
+                    'total_characters': total_characters,
+                    'average_tokens_per_file': round(avg_tokens_per_file, 2),
+                    'average_words_per_file': round(avg_words_per_file, 2),
+                    'average_characters_per_file': round(avg_chars_per_file, 2),
+                },
+                'per_file_summary': file_summaries,
+            }
+            
+            # Save to JSON
+            output_file = self.output_dir / 'token_stats.json'
+            with open(output_file, 'w', encoding='utf-8') as f:
+                json.dump(summary, f, ensure_ascii=False, indent=2)
+            
+            self.logger.info(f"✓ Saved token summary to {output_file.name}")
+            return True
+        except Exception as e:
+            self.logger.error(f"Error saving token summary: {str(e)}")
             return False
     
     def process(self) -> Dict[str, Any]:
@@ -283,6 +354,10 @@ class ParallelJSONLTokenizer:
         # Save merged file
         self.logger.info(f"\nSaving merged tokenized records...")
         saved = self.save_merged_jsonl(tokenized_records)
+        
+        # Save summary statistics
+        self.logger.info(f"Saving token summary statistics...")
+        summary_saved = self.save_token_summary(tokenized_records)
         
         # Calculate statistics
         successful = [r for r in tokenized_records if r.status == 'success']

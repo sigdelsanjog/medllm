@@ -1,12 +1,13 @@
 """
-Complete PDF → Tokens Pipeline
+Complete PDF → Tokens → Vocabulary Pipeline
 
 Orchestrates the full preprocessing pipeline:
 1. Extract text from PDFs (in-memory)
 2. Preprocess text (in-memory)
-3. Tokenize (saves merged_tokens.jsonl only)
+3. Tokenize (saves merged_tokens.jsonl and token_stats.json)
+4. Build Vocabulary (creates vocab.json, token_counts.json, and vocab_info.json)
 
-This is the main entry point for generating training data.
+This is the main entry point for generating training data with complete tokenization and vocabulary information.
 
 Usage:
     python3 pipeline.py \
@@ -52,6 +53,11 @@ spec3.loader.exec_module(tokenize_module)
 ParallelJSONLTokenizer = tokenize_module.ParallelJSONLTokenizer
 SimplifiedTokenizedRecord = tokenize_module.SimplifiedTokenizedRecord
 
+# Load build_vocabulary
+spec4 = importlib.util.spec_from_file_location("build_vocabulary", Path(__file__).parent / "build_vocabulary.py")
+vocab_module = importlib.util.module_from_spec(spec4)
+spec4.loader.exec_module(vocab_module)
+VocabularyBuilder = vocab_module.VocabularyBuilder
 
 # Configure logging
 logging.basicConfig(
@@ -236,6 +242,58 @@ class EndToEndPipeline:
         
         return result
     
+    def step4_build_vocabulary(self, tokenization_result: Dict[str, Any]) -> Dict[str, Any]:
+        """Step 4: Build vocabulary from tokenized data"""
+        self.logger.info("\n" + "="*70)
+        self.logger.info("STEP 4: VOCABULARY BUILDING")
+        self.logger.info("="*70)
+        
+        try:
+            # Get path to merged tokens
+            tokens_dir = self.output_dir / "tokens"
+            merged_tokens_file = tokens_dir / "merged_tokens.jsonl"
+            
+            if not merged_tokens_file.exists():
+                self.logger.warning(f"Merged tokens file not found: {merged_tokens_file}")
+                return {'status': 'failure', 'message': 'Merged tokens file not found'}
+            
+            # Build vocabulary
+            builder = VocabularyBuilder(str(merged_tokens_file), str(tokens_dir))
+            builder.build()
+            builder.save()
+            builder.print_summary()
+            
+            # Prepare vocabulary summary
+            vocab_info = {
+                'total_unique_tokens': len(builder.id_to_token),
+                'total_token_instances': sum(builder.token_frequency.values()),
+                'token_id_range': [
+                    int(min(builder.token_frequency.keys())),
+                    int(max(builder.token_frequency.keys()))
+                ] if builder.token_frequency else [0, 0],
+                'gpt2_vocab_enabled': bool(builder.gpt2_vocab),
+                'top_tokens': [
+                    {
+                        'token_id': token_id,
+                        'frequency': freq,
+                        'label': builder.id_to_token[token_id]
+                    }
+                    for token_id, freq in builder.token_frequency.most_common(10)
+                ]
+            }
+            
+            return {
+                'status': 'success',
+                'vocabulary_info': vocab_info,
+                'vocab_file': str(tokens_dir / 'vocab.json'),
+                'token_counts_file': str(tokens_dir / 'token_counts.json'),
+                'vocab_info_file': str(tokens_dir / 'vocab_info.json'),
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Error building vocabulary: {str(e)}")
+            return {'status': 'failure', 'message': str(e)}
+    
     def run(self) -> Dict[str, Any]:
         """Execute full pipeline"""
         start_time = time.time()
@@ -263,6 +321,13 @@ class EndToEndPipeline:
             # Step 3: Tokenize
             tokenization_result = self.step3_tokenize(preprocessed_records)
             
+            if tokenization_result.get('status') != 'success':
+                self.logger.error("Tokenization failed. Exiting.")
+                return {'status': 'failure', 'message': 'Tokenization failed'}
+            
+            # Step 4: Build Vocabulary
+            vocabulary_result = self.step4_build_vocabulary(tokenization_result)
+            
             total_time = time.time() - start_time
             
             # Final summary
@@ -272,6 +337,26 @@ class EndToEndPipeline:
             self.logger.info(f"\nFinal Outputs:")
             self.logger.info(f"  1. {self.output_dir}/full_preprocessed.jsonl (cleaned text)")
             self.logger.info(f"  2. {self.output_dir}/tokens/merged_tokens.jsonl (training tokens)")
+            self.logger.info(f"  3. {self.output_dir}/tokens/token_stats.json (token & text summary)")
+            self.logger.info(f"  4. {self.output_dir}/tokens/vocab.json (vocabulary mapping)")
+            self.logger.info(f"  5. {self.output_dir}/tokens/token_counts.json (token frequencies)")
+            self.logger.info(f"  6. {self.output_dir}/tokens/vocab_info.json (vocabulary metadata)")
+            
+            self.logger.info(f"\nToken Summary Statistics:")
+            if tokenization_result.get('status') == 'success':
+                self.logger.info(f"  Total tokens: {tokenization_result.get('total_tokens', 0):,}")
+                self.logger.info(f"  Total records: {tokenization_result.get('total_records', 0)}")
+                self.logger.info(f"  Average tokens per file: {tokenization_result.get('average_tokens_per_record', 0):.1f}")
+            
+            self.logger.info(f"\nVocabulary Statistics:")
+            if vocabulary_result.get('status') == 'success':
+                vocab_info = vocabulary_result.get('vocabulary_info', {})
+                self.logger.info(f"  Total unique tokens: {vocab_info.get('total_unique_tokens', 0):,}")
+                self.logger.info(f"  Total token instances: {vocab_info.get('total_token_instances', 0):,}")
+                token_range = vocab_info.get('token_id_range', [0, 0])
+                self.logger.info(f"  Token ID range: {token_range[0]} - {token_range[1]}")
+                self.logger.info(f"  GPT2 vocabulary enabled: {vocab_info.get('gpt2_vocab_enabled', False)}")
+            
             self.logger.info(f"\nTotal Time: {total_time:.2f}s")
             self.logger.info(f"="*70 + "\n")
             
@@ -285,6 +370,7 @@ class EndToEndPipeline:
                     'records': len(preprocessed_records),
                 },
                 'tokenization': tokenization_result,
+                'vocabulary': vocabulary_result,
                 'output_dir': str(self.output_dir),
             }
             
